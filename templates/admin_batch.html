@@ -84,7 +84,11 @@
   <div class="row-item bg-white rounded-xl border border-slate-100 shadow-sm p-3" data-search="{{ (r.name ~ ' ' ~ r.emp_id) | lower }}">
     <div class="flex items-center justify-between">
       <div>
+        {% if r.name and r.name.strip().upper() == "NEHA SHARMA" %}
+        <p class="font-medium text-sm text-slate-800"><span class="sparkle d1">✨</span> <span class="glitter-name">{{ r.name }}</span> <span class="sparkle d3">✨</span> <span class="text-slate-400 font-normal">({{ r.emp_id }})</span></p>
+        {% else %}
         <p class="font-medium text-sm text-slate-800">{{ r.name }} <span class="text-slate-400 font-normal">({{ r.emp_id }})</span></p>
+        {% endif %}
         <p class="text-xs text-slate-400">{{ r.designation }} &middot; Net: {{ r.net_payable }}</p>
       </div>
       {% if st == "ok" %}

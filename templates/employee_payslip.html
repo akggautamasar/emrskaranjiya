@@ -7,7 +7,13 @@
 <div class="mt-3 bg-white rounded-2xl shadow-lg shadow-slate-200/60 border border-slate-100 overflow-hidden">
   <div class="px-5 py-4 bg-gradient-to-r from-brand-950 to-brand-800 text-white flex items-center justify-between">
     <div>
+      {% if record.name and record.name.strip().upper() == "NEHA SHARMA" %}
+      <h1 class="font-display text-lg font-semibold">
+        <span class="sparkle d1">✨</span> <span class="glitter-name">{{ record.name }}</span> <span class="sparkle d3">✨</span>
+      </h1>
+      {% else %}
       <h1 class="font-display text-lg font-semibold">{{ record.name }}</h1>
+      {% endif %}
       <p class="text-sm text-brand-200">{{ record.designation }}{% if record.department %} &middot; {{ record.department }}{% endif %}</p>
       <p class="text-xs text-brand-300/80 mt-0.5">Employee ID: {{ record.emp_id }}</p>
     </div>
