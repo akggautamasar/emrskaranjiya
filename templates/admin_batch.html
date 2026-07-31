@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ batch.label }}{% endblock %}
+{% block content %}
+
+<a href="/admin" class="text-sm text-slate-500 hover:underline">&larr; All batches</a>
+
+<div class="mt-3 flex items-center justify-between flex-wrap gap-2">
+  <div>
+    <h1 class="text-xl font-semibold">{{ batch.label }}</h1>
+    <p class="text-xs text-slate-400">File: {{ batch.filename }}</p>
+  </div>
+  <div class="flex gap-2">
+    <a href="/admin/batch/{{ batch.id }}/export" class="text-sm border border-slate-300 rounded-lg px-3 py-1.5 hover:bg-slate-100">Export CSV</a>
+    {% if batch.status == "review" %}
+    <form method="post" action="/admin/batch/{{ batch.id }}/publish" onsubmit="return confirm('Publish this as final? Employees will no longer be able to submit changes.');">
+      <button class="text-sm bg-green-600 text-white rounded-lg px-3 py-1.5 hover:bg-green-700">Publish Final</button>
+    </form>
+    {% else %}
+    <form method="post" action="/admin/batch/{{ batch.id }}/reopen" onsubmit="return confirm('Reopen for review? This lets employees submit responses again.');">
+      <button class="text-sm bg-amber-500 text-white rounded-lg px-3 py-1.5 hover:bg-amber-600">Reopen for Review</button>
+    </form>
+    {% endif %}
+    <form method="post" action="/admin/batch/{{ batch.id }}/delete" onsubmit="return confirm('Delete this batch permanently? This cannot be undone.');">
+      <button class="text-sm border border-red-300 text-red-600 rounded-lg px-3 py-1.5 hover:bg-red-50">Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="grid grid-cols-4 gap-2 mt-4">
+  <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
+    <p class="text-lg font-semibold">{{ stats.total }}</p>
+    <p class="text-xs text-slate-400">Total</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
+    <p class="text-lg font-semibold text-green-600">{{ stats.ok }}</p>
+    <p class="text-xs text-slate-400">OK</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
+    <p class="text-lg font-semibold text-red-600">{{ stats.issue }}</p>
+    <p class="text-xs text-slate-400">Issues</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
+    <p class="text-lg font-semibold text-amber-600">{{ stats.pending }}</p>
+    <p class="text-xs text-slate-400">Pending</p>
+  </div>
+</div>
+
+<input id="filterBox" type="text" placeholder="Search by name or Employee ID..."
+  class="w-full mt-4 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+  oninput="filterRows()">
+
+<div class="mt-3 space-y-2" id="rowsContainer">
+  {% for r in records %}
+  {% set st = r.review.status if r.review else "pending" %}
+  <div class="row-item bg-white rounded-xl border border-slate-200 p-3" data-search="{{ (r.name ~ ' ' ~ r.emp_id) | lower }}">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="font-medium text-sm">{{ r.name }} <span class="text-slate-400 font-normal">({{ r.emp_id }})</span></p>
+        <p class="text-xs text-slate-400">{{ r.designation }} &middot; Net: {{ r.net_payable }}</p>
+      </div>
+      {% if st == "ok" %}
+      <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">OK</span>
+      {% elif st == "issue" %}
+      <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Issue</span>
+      {% else %}
+      <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">Pending</span>
+      {% endif %}
+    </div>
+    {% if r.review and r.review.comment %}
+    <p class="text-xs text-red-600 mt-2 bg-red-50 rounded-lg px-2 py-1.5">{{ r.review.comment }}</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+function filterRows() {
+  const q = document.getElementById('filterBox').value.toLowerCase();
+  document.querySelectorAll('.row-item').forEach(el => {
+    el.style.display = el.dataset.search.includes(q) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}
