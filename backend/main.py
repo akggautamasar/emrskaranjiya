@@ -1,6 +1,7 @@
 import csv
 import io
 import os
+import urllib.parse
 from datetime import datetime
 
 from fastapi import FastAPI, Request, Depends, UploadFile, File, Form
@@ -18,9 +19,38 @@ Base.metadata.create_all(bind=engine)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Office WhatsApp number for employees to confirm/report on, in international
+# format without '+' or spaces. Override with the WHATSAPP_NUMBER env var.
+WHATSAPP_NUMBER = os.environ.get("WHATSAPP_NUMBER", "918358998892")
+
 app = FastAPI(title="EMRS Karanjiya Salary Review Portal")
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+
+def format_whatsapp_display(number: str) -> str:
+    digits = "".join(ch for ch in number if ch.isdigit())
+    if digits.startswith("91") and len(digits) == 12:
+        rest = digits[2:]
+        return f"+91 {rest[:5]} {rest[5:]}"
+    return f"+{digits}"
+
+
+WHATSAPP_NUMBER_DISPLAY = format_whatsapp_display(WHATSAPP_NUMBER)
+
+
+def build_whatsapp_link(record: EmployeeRecord) -> str:
+    review = record.review
+    status_text = "Everything is OK" if review and review.status == "ok" else "There is an issue"
+    lines = [
+        f"EMRS Karanjiya Salary Slip - {record.batch.label}",
+        f"Employee: {record.name} ({record.emp_id})",
+        f"Status: {status_text}",
+    ]
+    if review and review.comment:
+        lines.append(f"Remark: {review.comment}")
+    text = "\n".join(lines)
+    return f"https://wa.me/{WHATSAPP_NUMBER}?text={urllib.parse.quote(text)}"
 
 
 def batch_stats(db: Session, batch_id: int):
@@ -68,9 +98,17 @@ def payslip(request: Request, record_id: int, db: Session = Depends(get_db), msg
     record = db.query(EmployeeRecord).filter(EmployeeRecord.id == record_id).first()
     if not record:
         return RedirectResponse(url="/")
+    whatsapp_link = build_whatsapp_link(record) if record.review else None
     return templates.TemplateResponse(
         "employee_payslip.html",
-        {"request": request, "record": record, "batch": record.batch, "msg": msg},
+        {
+            "request": request,
+            "record": record,
+            "batch": record.batch,
+            "msg": msg,
+            "whatsapp_link": whatsapp_link,
+            "whatsapp_number_display": WHATSAPP_NUMBER_DISPLAY,
+        },
     )
 
 
