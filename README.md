@@ -16,6 +16,11 @@ A small web app for a monthly salary-verification workflow:
    batch so no more responses can be submitted, and the payslip page shows "Final".
 5. Admin can **Reopen for Review** if a correction is needed, or **Export CSV**
    of everyone's status (plus remarks) for record-keeping.
+6. After an employee submits their response, the portal auto-opens **WhatsApp**
+   (`wa.me`) with a pre-filled message to the office number — employee name,
+   ID, status, and their remark — which they can edit before hitting send. The
+   number defaults to **+91 83589 98892**; change it anytime via the
+   `WHATSAPP_NUMBER` env var (digits only, country code first, e.g. `919876543210`).
 
 The Excel parser reads the sheet **generically from the header row** (row 1) —
 it just needs an `EmpId` column and an `Employee` (name) column somewhere in the
