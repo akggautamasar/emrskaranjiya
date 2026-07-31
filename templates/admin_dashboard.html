@@ -1,14 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Admin Dashboard — EMRS Karanjiya{% endblock %}
 {% block content %}
 
-<div class="flex items-center justify-between mb-4">
-  <h1 class="text-xl font-semibold">Admin Dashboard</h1>
-  <a href="/admin/logout" class="text-sm text-slate-500 hover:underline">Log out</a>
+<div class="flex items-center justify-between mb-5">
+  <div>
+    <h1 class="font-display text-xl font-semibold text-slate-800">Admin Dashboard</h1>
+    <p class="text-xs text-slate-400">EMRS Karanjiya &middot; Salary Review Portal</p>
+  </div>
+  <a href="/admin/logout" class="text-sm text-slate-500 hover:text-red-600 hover:underline">Log out</a>
 </div>
 
-<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
-  <h2 class="font-semibold mb-3">Upload New Salary Sheet</h2>
+<div class="bg-white rounded-2xl shadow-lg shadow-slate-200/60 border border-slate-100 p-5 mb-6">
+  <h2 class="font-display font-semibold mb-3 text-slate-800 flex items-center gap-2">
+    <span class="text-lg">📤</span> Upload New Salary Sheet
+  </h2>
   {% if error %}
   <div class="mb-4 rounded-lg bg-red-50 text-red-700 text-sm px-3 py-2 border border-red-200">{{ error }}</div>
   {% endif %}
@@ -16,14 +21,14 @@
     <div>
       <label class="block text-sm font-medium text-slate-700 mb-1">Label (e.g. "July 2026")</label>
       <input type="text" name="label" required
-        class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-slate-900">
+        class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
     </div>
     <div>
       <label class="block text-sm font-medium text-slate-700 mb-1">Excel File (.xlsx)</label>
       <input type="file" name="file" accept=".xlsx" required
-        class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2">
+        class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-brand-50 file:text-brand-700 file:font-medium hover:file:bg-brand-100">
     </div>
-    <button type="submit" class="w-full bg-slate-900 text-white rounded-lg py-2.5 font-medium hover:bg-slate-800">
+    <button type="submit" class="w-full bg-gradient-to-r from-brand-700 to-brand-600 text-white rounded-xl py-3 font-medium shadow-md shadow-brand-900/20 hover:shadow-lg hover:from-brand-800 hover:to-brand-700 transition">
       Upload &amp; Open for Review
     </button>
   </form>
@@ -32,26 +37,26 @@
   </p>
 </div>
 
-<h2 class="font-semibold mb-3">Past Batches</h2>
+<h2 class="font-display font-semibold mb-3 text-slate-800">Past Batches</h2>
 <div class="space-y-3">
   {% for batch, stats in batch_rows %}
-  <a href="/admin/batch/{{ batch.id }}" class="block bg-white rounded-xl border border-slate-200 p-4 hover:border-slate-400">
+  <a href="/admin/batch/{{ batch.id }}" class="block bg-white rounded-2xl border border-slate-100 shadow-sm p-4 hover:shadow-md hover:border-brand-200 transition">
     <div class="flex items-center justify-between">
       <div>
-        <p class="font-medium">{{ batch.label }}</p>
+        <p class="font-medium text-slate-800">{{ batch.label }}</p>
         <p class="text-xs text-slate-400">Uploaded {{ batch.uploaded_at.strftime("%d %b %Y, %I:%M %p") }}</p>
       </div>
       {% if batch.status == "published" %}
-      <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Published</span>
+      <span class="inline-flex items-center gap-1 text-xs bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">✓ Published</span>
       {% else %}
-      <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Under Review</span>
+      <span class="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full">● Under Review</span>
       {% endif %}
     </div>
     <div class="flex gap-4 mt-3 text-xs text-slate-500">
       <span>{{ stats.total }} employees</span>
-      <span class="text-green-600">{{ stats.ok }} OK</span>
-      <span class="text-red-600">{{ stats.issue }} issues</span>
-      <span class="text-amber-600">{{ stats.pending }} pending</span>
+      <span class="text-green-600 font-medium">{{ stats.ok }} OK</span>
+      <span class="text-red-600 font-medium">{{ stats.issue }} issues</span>
+      <span class="text-amber-600 font-medium">{{ stats.pending }} pending</span>
     </div>
   </a>
   {% else %}

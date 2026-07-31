@@ -1,73 +1,115 @@
 {% extends "base.html" %}
-{% block title %}{{ batch.label }}{% endblock %}
+{% block title %}{{ batch.label }} — EMRS Karanjiya{% endblock %}
 {% block content %}
 
-<a href="/admin" class="text-sm text-slate-500 hover:underline">&larr; All batches</a>
+<a href="/admin" class="text-sm text-brand-700 hover:underline">&larr; All batches</a>
 
 <div class="mt-3 flex items-center justify-between flex-wrap gap-2">
   <div>
-    <h1 class="text-xl font-semibold">{{ batch.label }}</h1>
+    <h1 class="font-display text-xl font-semibold text-slate-800">{{ batch.label }}</h1>
     <p class="text-xs text-slate-400">File: {{ batch.filename }}</p>
   </div>
-  <div class="flex gap-2">
-    <a href="/admin/batch/{{ batch.id }}/export" class="text-sm border border-slate-300 rounded-lg px-3 py-1.5 hover:bg-slate-100">Export CSV</a>
+  <div class="flex gap-2 flex-wrap">
+    <a href="/admin/batch/{{ batch.id }}/export" class="text-sm border border-slate-300 bg-white rounded-lg px-3 py-1.5 hover:bg-slate-50 transition">⬇ Export CSV</a>
     {% if batch.status == "review" %}
     <form method="post" action="/admin/batch/{{ batch.id }}/publish" onsubmit="return confirm('Publish this as final? Employees will no longer be able to submit changes.');">
-      <button class="text-sm bg-green-600 text-white rounded-lg px-3 py-1.5 hover:bg-green-700">Publish Final</button>
+      <button class="text-sm bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-lg px-3 py-1.5 shadow-sm hover:shadow transition">✓ Publish Final</button>
     </form>
     {% else %}
     <form method="post" action="/admin/batch/{{ batch.id }}/reopen" onsubmit="return confirm('Reopen for review? This lets employees submit responses again.');">
-      <button class="text-sm bg-amber-500 text-white rounded-lg px-3 py-1.5 hover:bg-amber-600">Reopen for Review</button>
+      <button class="text-sm bg-amber-500 text-white rounded-lg px-3 py-1.5 shadow-sm hover:bg-amber-600 transition">↺ Reopen for Review</button>
     </form>
     {% endif %}
     <form method="post" action="/admin/batch/{{ batch.id }}/delete" onsubmit="return confirm('Delete this batch permanently? This cannot be undone.');">
-      <button class="text-sm border border-red-300 text-red-600 rounded-lg px-3 py-1.5 hover:bg-red-50">Delete</button>
+      <button class="text-sm border border-red-200 text-red-600 bg-white rounded-lg px-3 py-1.5 hover:bg-red-50 transition">Delete</button>
     </form>
   </div>
 </div>
 
+{% if msg == "remark_saved" %}
+<div class="mt-4 rounded-lg bg-green-50 text-green-700 text-sm px-3 py-2 border border-green-200">
+  Remark saved — the employee will see it on their salary slip.
+</div>
+{% endif %}
+
 <div class="grid grid-cols-4 gap-2 mt-4">
-  <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
-    <p class="text-lg font-semibold">{{ stats.total }}</p>
+  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-3 text-center">
+    <p class="text-lg font-display font-semibold text-slate-800">{{ stats.total }}</p>
     <p class="text-xs text-slate-400">Total</p>
   </div>
-  <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
-    <p class="text-lg font-semibold text-green-600">{{ stats.ok }}</p>
+  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-3 text-center">
+    <p class="text-lg font-display font-semibold text-green-600">{{ stats.ok }}</p>
     <p class="text-xs text-slate-400">OK</p>
   </div>
-  <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
-    <p class="text-lg font-semibold text-red-600">{{ stats.issue }}</p>
+  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-3 text-center">
+    <p class="text-lg font-display font-semibold text-red-600">{{ stats.issue }}</p>
     <p class="text-xs text-slate-400">Issues</p>
   </div>
-  <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
-    <p class="text-lg font-semibold text-amber-600">{{ stats.pending }}</p>
+  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-3 text-center">
+    <p class="text-lg font-display font-semibold text-amber-600">{{ stats.pending }}</p>
     <p class="text-xs text-slate-400">Pending</p>
   </div>
 </div>
 
+<!-- Bulk remark -->
+<div class="mt-4 bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+  <button type="button" onclick="document.getElementById('bulkRemarkForm').classList.toggle('hidden')"
+    class="w-full flex items-center justify-between text-sm font-medium text-slate-700">
+    <span class="flex items-center gap-2">📌 Add a remark for employees</span>
+    <span class="text-slate-400 text-xs">tap to open</span>
+  </button>
+  <form id="bulkRemarkForm" method="post" action="/admin/batch/{{ batch.id }}/bulk_remark" class="hidden mt-3 space-y-3">
+    <textarea name="remark" rows="2" placeholder="e.g. GIS premium revised this month, contact office for details"
+      class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"></textarea>
+    <div class="flex items-center justify-between flex-wrap gap-2">
+      <label class="flex items-center gap-2 text-xs text-slate-500">
+        <input type="checkbox" name="overwrite" value="yes" class="rounded border-slate-300">
+        Overwrite existing individual remarks too
+      </label>
+      <button type="submit" class="text-sm bg-brand-700 text-white rounded-lg px-4 py-2 hover:bg-brand-800 transition">
+        Apply to all {{ stats.total }} employees
+      </button>
+    </div>
+    <p class="text-xs text-slate-400">This isn't compulsory — leave blank and don't submit if there's nothing to say. Use the field under each employee below to remark on just one or two people instead.</p>
+  </form>
+</div>
+
 <input id="filterBox" type="text" placeholder="Search by name or Employee ID..."
-  class="w-full mt-4 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+  class="w-full mt-4 rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
   oninput="filterRows()">
 
 <div class="mt-3 space-y-2" id="rowsContainer">
   {% for r in records %}
   {% set st = r.review.status if r.review else "pending" %}
-  <div class="row-item bg-white rounded-xl border border-slate-200 p-3" data-search="{{ (r.name ~ ' ' ~ r.emp_id) | lower }}">
+  <div class="row-item bg-white rounded-xl border border-slate-100 shadow-sm p-3" data-search="{{ (r.name ~ ' ' ~ r.emp_id) | lower }}">
     <div class="flex items-center justify-between">
       <div>
-        <p class="font-medium text-sm">{{ r.name }} <span class="text-slate-400 font-normal">({{ r.emp_id }})</span></p>
+        <p class="font-medium text-sm text-slate-800">{{ r.name }} <span class="text-slate-400 font-normal">({{ r.emp_id }})</span></p>
         <p class="text-xs text-slate-400">{{ r.designation }} &middot; Net: {{ r.net_payable }}</p>
       </div>
       {% if st == "ok" %}
-      <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">OK</span>
+      <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full whitespace-nowrap">✓ OK</span>
       {% elif st == "issue" %}
-      <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Issue</span>
+      <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full whitespace-nowrap">⚠ Issue</span>
       {% else %}
-      <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">Pending</span>
+      <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full whitespace-nowrap">Pending</span>
       {% endif %}
     </div>
     {% if r.review and r.review.comment %}
-    <p class="text-xs text-red-600 mt-2 bg-red-50 rounded-lg px-2 py-1.5">{{ r.review.comment }}</p>
+    <p class="text-xs text-red-700 mt-2 bg-red-50 rounded-lg px-2.5 py-1.5 border border-red-100">
+      <span class="font-medium">Employee says:</span> {{ r.review.comment }}
+    </p>
+    {% endif %}
+
+    <form method="post" action="/admin/record/{{ r.id }}/remark" class="mt-2 flex gap-2">
+      <input type="text" name="remark" value="{{ r.admin_remark or '' }}" placeholder="Add a remark for this employee (optional)"
+        class="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:bg-white">
+      <button type="submit" class="text-xs bg-brand-50 text-brand-700 font-medium rounded-lg px-3 py-1.5 hover:bg-brand-100 transition whitespace-nowrap">Save</button>
+    </form>
+    {% if r.admin_remark %}
+    <p class="text-xs text-amber-800 mt-1.5 bg-gold-400/10 border border-gold-500/30 rounded-lg px-2.5 py-1.5">
+      📌 {{ r.admin_remark }}
+    </p>
     {% endif %}
   </div>
   {% endfor %}
