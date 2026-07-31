@@ -1,4 +1,4 @@
-# Salary Review Portal
+# EMRS Karanjiya — Salary Review Portal
 
 A small web app for a monthly salary-verification workflow:
 
@@ -7,12 +7,15 @@ A small web app for a monthly salary-verification workflow:
 2. **Employees** go to the site, enter their Employee ID, and see their own row —
    every column from the sheet — and mark it **"Everything is OK"** or
    **"Something is wrong"** (with a comment).
-3. **Admin** watches a live OK / Issue / Pending count on the batch page, and can
-   read every reported issue with its comment.
+3. **Admin** watches a live OK / Issue / Pending count on the batch page, reads
+   every reported issue with its comment, and can add an optional **remark** —
+   either for one employee (e.g. "Rs 500 deducted for library book not
+   returned") or for everyone at once (e.g. "DA revised to 54% this month") —
+   which shows up right on that employee's salary slip. Neither is compulsory.
 4. Once everyone has confirmed, admin clicks **Publish Final** — this locks the
    batch so no more responses can be submitted, and the payslip page shows "Final".
 5. Admin can **Reopen for Review** if a correction is needed, or **Export CSV**
-   of everyone's status for record-keeping.
+   of everyone's status (plus remarks) for record-keeping.
 
 The Excel parser reads the sheet **generically from the header row** (row 1) —
 it just needs an `EmpId` column and an `Employee` (name) column somewhere in the
