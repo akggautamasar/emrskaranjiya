@@ -18,7 +18,7 @@ Base.metadata.create_all(bind=engine)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-app = FastAPI(title="Salary Review Portal")
+app = FastAPI(title="EMRS Karanjiya Salary Review Portal")
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
@@ -190,7 +190,7 @@ async def admin_upload(
 
 
 @app.get("/admin/batch/{batch_id}", response_class=HTMLResponse)
-def admin_batch_detail(request: Request, batch_id: int, db: Session = Depends(get_db)):
+def admin_batch_detail(request: Request, batch_id: int, db: Session = Depends(get_db), msg: str = ""):
     if not is_admin(request):
         return RedirectResponse(url="/admin/login")
     batch = db.query(Batch).filter(Batch.id == batch_id).first()
@@ -205,7 +205,7 @@ def admin_batch_detail(request: Request, batch_id: int, db: Session = Depends(ge
     stats = batch_stats(db, batch_id)
     return templates.TemplateResponse(
         "admin_batch.html",
-        {"request": request, "batch": batch, "records": records, "stats": stats},
+        {"request": request, "batch": batch, "records": records, "stats": stats, "msg": msg},
     )
 
 
@@ -244,6 +244,37 @@ def admin_delete(request: Request, batch_id: int, db: Session = Depends(get_db))
     return RedirectResponse(url="/admin", status_code=303)
 
 
+@app.post("/admin/record/{record_id}/remark")
+def admin_set_remark(request: Request, record_id: int, remark: str = Form(""), db: Session = Depends(get_db)):
+    if not is_admin(request):
+        return RedirectResponse(url="/admin/login")
+    record = db.query(EmployeeRecord).filter(EmployeeRecord.id == record_id).first()
+    if not record:
+        return RedirectResponse(url="/admin", status_code=303)
+    record.admin_remark = remark.strip()
+    db.commit()
+    return RedirectResponse(url=f"/admin/batch/{record.batch_id}?msg=remark_saved", status_code=303)
+
+
+@app.post("/admin/batch/{batch_id}/bulk_remark")
+def admin_bulk_remark(
+    request: Request,
+    batch_id: int,
+    remark: str = Form(""),
+    overwrite: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    if not is_admin(request):
+        return RedirectResponse(url="/admin/login")
+    remark = remark.strip()
+    records = db.query(EmployeeRecord).filter(EmployeeRecord.batch_id == batch_id).all()
+    for r in records:
+        if overwrite == "yes" or not (r.admin_remark or "").strip():
+            r.admin_remark = remark
+    db.commit()
+    return RedirectResponse(url=f"/admin/batch/{batch_id}?msg=remark_saved", status_code=303)
+
+
 @app.get("/admin/batch/{batch_id}/export")
 def admin_export(request: Request, batch_id: int, db: Session = Depends(get_db)):
     if not is_admin(request):
@@ -256,7 +287,7 @@ def admin_export(request: Request, batch_id: int, db: Session = Depends(get_db))
     )
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["EmpId", "Name", "Department", "Designation", "Net Payable", "Status", "Comment"])
+    writer.writerow(["EmpId", "Name", "Department", "Designation", "Net Payable", "Status", "Employee Comment", "Admin Remark"])
     for r in records:
         writer.writerow(
             [
@@ -267,6 +298,7 @@ def admin_export(request: Request, batch_id: int, db: Session = Depends(get_db))
                 r.net_payable,
                 r.review.status if r.review else "pending",
                 r.review.comment if r.review else "",
+                r.admin_remark or "",
             ]
         )
     buf.seek(0)

@@ -35,6 +35,7 @@ class EmployeeRecord(Base):
     designation = Column(String)
     net_payable = Column(String)
     data = Column(JSON)  # full row, in original column order: {header: value}
+    admin_remark = Column(Text, default="")  # optional note from admin, e.g. explaining a deduction
 
     batch = relationship("Batch", back_populates="records")
     review = relationship(
